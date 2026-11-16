@@ -1,9 +1,13 @@
-# Importing the required libraries
-from flask import Flask, render_template, request
+import os
+from flask import Flask, render_template, request, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 import joblib
 
 #Creating the Flask app
 app = Flask(__name__)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Returing the homepage when this API's Endpoint is hit
 @app.route('/', methods=['GET'])
@@ -32,7 +36,7 @@ def predict():
     sulphates = request.form['sulphates']
     alcohol = request.form['alcohol']
 
-    model = joblib.load('./model/new_tree.pkl')
+    model = joblib.load(os.path.join(BASE_DIR, 'model', 'new_tree.pkl'))
 
     prediction = model.predict([[fixed_acidity, volatile_acidity, citric_acid, residual_sugar, chlorides, free_sulfur_dioxide, total_sulfur_dioxide, density, pH, sulphates, alcohol]])
     if prediction[0] < 5:
@@ -41,4 +45,7 @@ def predict():
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    port = int(os.environ.get("WINE_PORT", 5105))
+    host = os.environ.get("HOST", "127.0.0.1")
+    print(f"🚀 Red Wine Quality App running on http://{host}:{port}")
+    app.run(host=host, port=port, debug=False)

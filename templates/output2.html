@@ -1,35 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
-        <link href="{{ url_for('static', filename='css/output2.css') }}" rel="stylesheet">
-    <title>Red Wine Quality Prediction</title>
-</head>
-<body>
-    <div class="container">
-        <form action="/predict" method="POST">
-            <div class="details-form form-group">
-                <div class="title">Red Wine Quality Score</div>
-                <div class="title sub_1">{{prediction}}</div>
-                <div class="title">out of</div>
-                <div class="title sub_2"> 10</div>
+    <title>Wine Quality Score: {{ prediction }} / 10 | Decision Tree ML</title>
 
+    <!-- Tailwind CSS v3 Engine -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Theme Logic with Manual Toggle & System Default -->
+    <script>
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('themeToggleIcon');
+            if (icon) {
+                icon.className = isDark ? 'bi bi-sun-fill text-sm text-amber-400' : 'bi bi-moon-stars-fill text-sm text-slate-600 dark:text-slate-300';
+            }
+        }
+        function applyCurrentTheme() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = saved === 'dark' || (!saved && prefersDark);
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            updateThemeIcon(isDark);
+        }
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        }
+        applyCurrentTheme();
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (!localStorage.getItem('theme')) {
+                applyCurrentTheme();
+            }
+        });
+        document.addEventListener('DOMContentLoaded', applyCurrentTheme);
+    </script>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-200 antialiased selection:bg-rose-500 selection:text-white flex flex-col justify-between">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-700 to-amber-500 flex items-center justify-center text-white shadow-lg shadow-rose-900/20">
+                    <i class="bi bi-cup-straw text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-slate-900 dark:text-white text-base sm:text-lg">Wine Quality</span>
+                        <span class="px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60">Decision Tree</span>
+                    </div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                        Enological Analysis Result
+                    </div>
+                </div>
             </div>
-        </form>
-    </div>
-    <nav class="navbar fixed-bottom navbar-light bg-light">
-        <span class="navbar-text">
-            Made by Biswajit. Git Link- <a
-                href="https://github.com/thecuriousjuel/RedWineQualityPrediction.git" target="_blank">https://github.com/thecuriousjuel/RedWineQualityPrediction.git</a>
-        </span>
-    </nav>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj"
-        crossorigin="anonymous"></script>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Theme Toggle Button -->
+                <button type="button" onclick="toggleTheme()" class="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none" title="Toggle Theme" aria-label="Toggle Theme">
+                    <i id="themeToggleIcon" class="bi bi-moon-stars-fill text-sm"></i>
+                </button>
+                <a href="{{ url_for('homepage') }}" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>New Evaluation</span>
+                </a>
+                <a href="https://thecuriousjuel.com/" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i class="bi bi-house-door"></i>
+                    <span class="hidden sm:inline">Portfolio Home</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 flex-1 w-full">
+
+        <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-8 sm:p-12 shadow-2xl shadow-slate-200/50 dark:shadow-none text-center relative overflow-hidden">
+            <!-- Background Emerald/Gold Glow -->
+            <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Sommelier Score Ring -->
+            <div class="inline-flex flex-col items-center justify-center w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 border-2 border-emerald-500/40 text-emerald-500 dark:text-emerald-400 shadow-xl shadow-emerald-500/10 mb-6">
+                <span class="text-4xl sm:text-5xl font-extrabold font-mono tracking-tight">{{ prediction }}</span>
+                <span class="text-xs uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">out of 10</span>
+            </div>
+
+            <!-- Status Pill Badge -->
+            <div>
+                <div class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 mb-4">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Quality Commercial Vintage</span>
+                </div>
+            </div>
+
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                Quality Rating: <span class="text-emerald-500">{{ prediction }} / 10</span>
+            </h1>
+
+            <p class="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+                The Decision Tree classifier categorizes this wine sample at or above the commercial benchmark (&ge; 5.0). The balance of total acidity, optimal pH, clean residual sugars, and adequate alcohol content reflects good vinification and drinkability.
+            </p>
+
+            <!-- Actions -->
+            <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+                <a href="{{ url_for('homepage') }}"
+                    class="px-6 py-3 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-900/25 active:scale-[0.99] transition-all inline-flex items-center gap-2">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Evaluate Another Sample</span>
+                </a>
+                <a href="https://thecuriousjuel.com/"
+                    class="px-6 py-3 rounded-xl font-semibold text-sm text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors inline-flex items-center gap-2">
+                    <i class="bi bi-grid"></i>
+                    <span>All Projects Hub</span>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white/60 dark:bg-slate-900/60 border-t border-slate-200/80 dark:border-slate-800/80 py-6">
+        <div class="max-w-6xl mx-auto px-4 text-center text-xs text-slate-500 dark:text-slate-400 space-y-1">
+            <div>
+                Built by <strong class="text-slate-700 dark:text-slate-200">Biswajit Basak</strong> &bull; Hosted on Sony Server Debian Cluster
+            </div>
+            <div>
+                Source code licensed under MIT &bull; <a href="https://github.com/thecuriousjuel/RedWineQualityPrediction.git" target="_blank" class="text-rose-600 dark:text-rose-400 hover:underline">GitHub Repository</a>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
