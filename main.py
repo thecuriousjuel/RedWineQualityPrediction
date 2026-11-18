@@ -45,7 +45,7 @@ def predict():
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get("WINE_PORT", 5105))
+    port = int(os.environ.get("PORT", os.environ.get("WINE_PORT", 5205)))
     host = os.environ.get("HOST", "127.0.0.1")
     print(f"🚀 Red Wine Quality App running on http://{host}:{port}")
     app.run(host=host, port=port, debug=False)
